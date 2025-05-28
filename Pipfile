@@ -1,13 +1,13 @@
 [[source]]
+name = "pypi"
 url = "https://pypi.org/simple"
 verify_ssl = true
-name = "pypi"
-
-[packages]
-sqlalchemy = "*"
-tabulate = "*"
 
 [dev-packages]
+
+[packages]
+sqlalchemy = "==2.0.35"
+tabulate = "*"
 
 [requires]
 python_version = "3.8"

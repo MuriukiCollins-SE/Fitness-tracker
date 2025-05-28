@@ -82,7 +82,7 @@ A simple command-line app to track workouts and exercises. Data is saved in a SQ
 
 1. Activate the virtual environment:
    ```sh
-   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+   source .venv/bin/activate  
    ```
 
 2. Run the app:
@@ -150,14 +150,7 @@ Type a number (1-5) to choose an option.
 2. Then select **3. List All Workouts**.
 3. You will see a table of all workouts, for example:
 
-```
-All Workouts (1 total)
-+----+--------------------+--------------+-------+--------------+--------------+
-| ID | Date               | Duration (min) | Notes | Trainee Name | Trainee ID   |
-+----+--------------------+--------------+-------+--------------+--------------+
-| 103| 2025-05-28 00:00:01| 20           | Afternoon workout | Emma | 3         |
-+----+--------------------+--------------+-------+--------------+--------------+
-```
+
 
 ---
 
@@ -226,4 +219,17 @@ For help, suggestions, or issues:
 
 - **Email**: your.email@example.com
 - **GitHub**: [yourusername/fitness-tracker](https://github.com/yourusername/fitness-tracker/issues)
+
+---
+
+## Overview
+
+This project is a Phase 3 CLI and ORM application in Python. It demonstrates:
+
+- A command-line interface (CLI) that solves a real-world problem (fitness tracking).
+- A database managed with SQLAlchemy ORM, with 3+ related tables (`Trainer`, `Trainee`, `Workout`, `Exercise`).
+- A well-maintained virtual environment using Pipenv or venv.
+- Proper package structure (`lib/`, `lib/db/`, etc.).
+- Use of Python lists, dicts, and tuples for in-memory data handling.
+- Follows best practices for code organization and documentation.
 
