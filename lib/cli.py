@@ -1,4 +1,4 @@
-from lib.db.models import Session, init_db, Workout, Exercise
+from lib.db.models import create_db, get_sessionmaker, Workout, Exercise
 from lib.helpers import validate_positive_int, validate_float, print_table
 from datetime import datetime
 
@@ -29,7 +29,8 @@ def exercise_menu():
     print("7. Back")
 
 def main():
-    init_db()
+    engine = create_db()
+    Session = get_sessionmaker(engine)
     session = Session()
 
     while True:

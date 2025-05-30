@@ -38,16 +38,16 @@ A simple command-line app to track workouts and exercises. Data is saved in a SQ
 
    ```sh
    python3 -m venv .venv
-   source .venv/bin/activate  
+   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
    ```
 
 3. **Install Dependencies**
 
-   - Create a `requirements.txt` file with:
+   - Install SQLAlchemy and other dependencies:
+     ```sh
+     pip install sqlalchemy tabulate
      ```
-     sqlalchemy==2.0.35
-     ```
-   - Then install:
+   - Or, if you have a `requirements.txt` file:
      ```sh
      pip install -r requirements.txt
      ```
