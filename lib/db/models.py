@@ -31,8 +31,8 @@ class Workout(Base):
     trainee_id = Column(Integer, ForeignKey('trainees.id', ondelete='SET NULL'), nullable=False)
     trainee = relationship("Trainee", back_populates="workouts")
     exercises = relationship("Exercise", back_populates="workout")
-    check_in_time = Column(DateTime, default=datetime.now)
-    check_out_time = Column(DateTime, nullable=True)
+    check_in_time = Column(DateTime, nullable=True)   # Only set when trainee checks in
+    check_out_time = Column(DateTime, nullable=True)  # Only set when trainee checks out
 
     @classmethod
     def delete(cls, session, workout_id):

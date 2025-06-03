@@ -5,6 +5,7 @@ from sqlalchemy.orm import joinedload
 from datetime import datetime
 import random
 import os
+import calendar
 
 def main_menu():
     print("\nFitness Tracker CLI")
@@ -227,7 +228,77 @@ def trainee_menu():
     print("\nTrainee Menu")
     print("1. Trainee Registration")
     print("2. View My Details")
-    print("3. Back to Main Menu")
+    print("3. Record Attendance (Check-in/Check-out)")
+    print("4. Back to Main Menu")
+
+def record_attendance(session):
+    try:
+        trainee_id = input("Enter your trainee ID: ").strip()
+        trainee_id = validate_positive_int(trainee_id, "trainee ID")
+        trainee = session.query(Trainee).filter_by(id=trainee_id).first()
+        if not trainee:
+            print("Trainee not found.")
+            return
+
+        # List all workouts for this trainee
+        workouts = sorted(trainee.workouts, key=lambda w: w.date)
+        if not workouts:
+            print("No workouts found for this trainee.")
+            return
+
+        print("\nYour Workouts:")
+        for idx, w in enumerate(workouts, 1):
+            day_name = w.date.strftime('%A')
+            print(f"{idx}. Workout ID: {w.id}, Date: {w.date.strftime('%Y-%m-%d')} ({day_name}), Duration: {w.duration} min, Notes: {w.notes or 'None'}")
+
+        # Let trainee pick a workout by day of week or by index
+        print("\nChoose a workout by number or day of the week (e.g., 'Monday'):")
+        choice = input("Enter choice: ").strip()
+        selected_workout = None
+        if choice.isdigit():
+            idx = int(choice) - 1
+            if 0 <= idx < len(workouts):
+                selected_workout = workouts[idx]
+        else:
+            # Try to match by day name
+            day_choice = choice.capitalize()
+            for w in workouts:
+                if w.date.strftime('%A') == day_choice:
+                    selected_workout = w
+                    break
+
+        if not selected_workout:
+            print("Workout not found for your selection.")
+            return
+
+        print(f"\nSelected Workout ID: {selected_workout.id}, Date: {selected_workout.date.strftime('%Y-%m-%d')} ({selected_workout.date.strftime('%A')})")
+        # List exercises for this workout
+        if selected_workout.exercises:
+            print("Exercises for this workout:")
+            for e in selected_workout.exercises:
+                print(f"  Exercise ID: {e.id}, Name: {e.name}, Category: {e.category}, Reps: {e.reps}, Sets: {e.sets}, Weight: {e.weight or 'None'}")
+        else:
+            print("No exercises for this workout.")
+
+        print("\n1. Check-in")
+        print("2. Check-out")
+        action = input("Enter choice (1-2): ").strip()
+        now = datetime.now()
+        if action == "1":
+            selected_workout.check_in_time = now
+            session.commit()
+            print(f"Checked in for workout ID {selected_workout.id} at {selected_workout.check_in_time.strftime('%Y-%m-%d %H:%M:%S')}")
+        elif action == "2":
+            if not selected_workout.check_in_time:
+                print("You must check in before checking out.")
+            else:
+                selected_workout.check_out_time = now
+                session.commit()
+                print(f"Checked out for workout ID {selected_workout.id} at {selected_workout.check_out_time.strftime('%Y-%m-%d %H:%M:%S')}")
+        else:
+            print("Invalid choice.")
+    except ValueError as e:
+        print(f"Error: {e}")
 
 def view_trainee_details(session):
     try:
@@ -245,7 +316,7 @@ def view_trainee_details(session):
         if trainee.workouts:
             print("\nWorkouts:")
             for w in trainee.workouts:
-                print(f"  Workout ID: {w.id}, Date: {w.date.strftime('%Y-%m-%d %H:%M:%S')}, Duration: {w.duration} min, Notes: {w.notes or 'None'}")
+                print(f"  Workout ID: {w.id}, Date: {w.date.strftime('%Y-%m-%d')}, Duration: {w.duration} min, Notes: {w.notes or 'None'}")
                 print(f"    Check-in: {w.check_in_time.strftime('%Y-%m-%d %H:%M:%S') if w.check_in_time else 'None'}")
                 print(f"    Check-out: {w.check_out_time.strftime('%Y-%m-%d %H:%M:%S') if w.check_out_time else 'None'}")
                 if w.exercises:
@@ -447,12 +518,14 @@ def main():
         elif choice == "2":
             while True:
                 trainee_menu()
-                t_choice = input("Enter choice (1-3): ").strip()
+                t_choice = input("Enter choice (1-4): ").strip()
                 if t_choice == "1":
                     trainee_workflow(session)
                 elif t_choice == "2":
                     view_trainee_details(session)
                 elif t_choice == "3":
+                    record_attendance(session)
+                elif t_choice == "4":
                     break
                 else:
                     print("Invalid choice")
