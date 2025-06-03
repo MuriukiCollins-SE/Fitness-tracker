@@ -98,7 +98,7 @@ You will see the following options:
 Fitness Tracker CLI
 1. View Trainer Menu
 2. Track Trainee Progress
-3. View Workouts
+3. Workout Menu
 4. Exercise Menu
 5. Exit
 ```
@@ -232,4 +232,12 @@ This project is a Phase 3 CLI and ORM application in Python. It demonstrates:
 - Proper package structure (`lib/`, `lib/db/`, etc.).
 - Use of Python lists, dicts, and tuples for in-memory data handling.
 - Follows best practices for code organization and documentation.
+
+---
+
+## Check-in and Check-out Times
+
+- When you create a workout, the check-in time is recorded automatically.
+- To record when a trainee leaves, use the "Check Out" option in the Workout Menu.
+- When listing workouts, both check-in and check-out times are displayed.
 

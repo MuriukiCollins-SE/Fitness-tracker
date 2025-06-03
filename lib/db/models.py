@@ -11,13 +11,13 @@ Base = declarative_base()
 class Trainer(Base):
     __tablename__ = 'trainers'
     id = Column(Integer, primary_key=True)
-    name = Column(String(50), nullable=False)
+    name = Column(String(50), nullable=False, unique=True)  # Ensure unique trainer names
     trainees = relationship("Trainee", back_populates="trainer")
 
 class Trainee(Base):
     __tablename__ = 'trainees'
     id = Column(Integer, primary_key=True)
-    name = Column(String(50), nullable=False)
+    name = Column(String(50), nullable=False, unique=True)  # Ensure unique trainee names
     trainer_id = Column(Integer, ForeignKey('trainers.id'))
     trainer = relationship("Trainer", back_populates="trainees")
     workouts = relationship("Workout", back_populates="trainee")
@@ -31,6 +31,8 @@ class Workout(Base):
     trainee_id = Column(Integer, ForeignKey('trainees.id', ondelete='SET NULL'), nullable=False)
     trainee = relationship("Trainee", back_populates="workouts")
     exercises = relationship("Exercise", back_populates="workout")
+    check_in_time = Column(DateTime, default=datetime.now)
+    check_out_time = Column(DateTime, nullable=True)
 
     @classmethod
     def delete(cls, session, workout_id):

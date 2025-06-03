@@ -2,13 +2,14 @@ from lib.db.models import Workout, Exercise, Trainer, Trainee, create_db, get_se
 from lib.helpers import validate_positive_int, validate_float, print_table
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
+from datetime import datetime
 import random
 import os
 
 def main_menu():
     print("\nFitness Tracker CLI")
     print("1. View Trainer Menu")
-    print("2. Trainee registration")
+    print("2. Trainee Menu")  # Combine registration and view details here
     print("3. Workout Menu")
     print("4. Exercise Menu")
     print("5. Exit")
@@ -29,7 +30,8 @@ def workout_menu():
     print("4. Find Workout by ID")
     print("5. View Exercises for Workout")
     print("6. Update Workout")
-    print("7. Back to Main Menu")
+    print("7. Check Out (Set Leave Time)")  # Add this option
+    print("8. Back to Main Menu")           # Increment menu options
 
 def exercise_menu():
     print("\nExercise Menu")
@@ -135,7 +137,7 @@ def trainee_workflow(session):
         print(f"Debug: Created trainee ID {trainee_id}, name: {name}, trainer_id: {trainer.id}")
 
         for w in workouts_data:
-            workout = Workout(duration=w["duration"], notes=w["notes"], trainee_id=trainee_id)
+            workout = Workout(duration=w["duration"], notes=w["notes"], trainee_id=trainee_id, check_in_time=datetime.now())
             session.add(workout)
             session.flush()
             for e in w["exercises"]:
@@ -221,6 +223,42 @@ def trainee_workflow(session):
         print(f"Unexpected Error: {e}")
         session.rollback()
 
+def trainee_menu():
+    print("\nTrainee Menu")
+    print("1. Trainee Registration")
+    print("2. View My Details")
+    print("3. Back to Main Menu")
+
+def view_trainee_details(session):
+    try:
+        trainee_id = input("Enter your trainee ID: ").strip()
+        trainee_id = validate_positive_int(trainee_id, "trainee ID")
+        trainee = session.query(Trainee).filter_by(id=trainee_id).first()
+        if not trainee:
+            print("Trainee not found.")
+            return
+        print(f"\nTrainee: {trainee.name} (ID: {trainee.id})")
+        if trainee.trainer:
+            print(f"Assigned Trainer: {trainee.trainer.name} (ID: {trainee.trainer.id})")
+        else:
+            print("No trainer assigned.")
+        if trainee.workouts:
+            print("\nWorkouts:")
+            for w in trainee.workouts:
+                print(f"  Workout ID: {w.id}, Date: {w.date.strftime('%Y-%m-%d %H:%M:%S')}, Duration: {w.duration} min, Notes: {w.notes or 'None'}")
+                print(f"    Check-in: {w.check_in_time.strftime('%Y-%m-%d %H:%M:%S') if w.check_in_time else 'None'}")
+                print(f"    Check-out: {w.check_out_time.strftime('%Y-%m-%d %H:%M:%S') if w.check_out_time else 'None'}")
+                if w.exercises:
+                    print("    Exercises:")
+                    for e in w.exercises:
+                        print(f"      Exercise ID: {e.id}, Name: {e.name}, Category: {e.category}, Reps: {e.reps}, Sets: {e.sets}, Weight: {e.weight or 'None'}")
+                else:
+                    print("    No exercises for this workout.")
+        else:
+            print("No workouts found.")
+    except ValueError as e:
+        print(f"Error: {e}")
+
 def main():
     db_path = os.path.abspath("fitness_tracker.db")
     print(f"Debug: Database at {db_path}")
@@ -286,14 +324,6 @@ def main():
                                                     t.id, t.name, w.id, w.date.strftime("%Y-%m-%d %H:%M:%S"),
                                                     data["id"], ex_name, category, data["reps"],
                                                     data["sets"], ",".join(data["weights"]) or "None"
-                                                ])
-                                                seen.add(entry_key)
-                                        if not w.exercises:
-                                            entry_key = (t.id, w.id, 0)
-                                            if entry_key not in seen:
-                                                table.append([
-                                                    t.id, t.name, w.id, w.date.strftime("%Y-%m-%d %H:%M:%S"),
-                                                    "", "", "", "", "", ""
                                                 ])
                                                 seen.add(entry_key)
                                     if not t.workouts:
@@ -415,12 +445,22 @@ def main():
                     print("Invalid choice")
 
         elif choice == "2":
-            trainee_workflow(session)
+            while True:
+                trainee_menu()
+                t_choice = input("Enter choice (1-3): ").strip()
+                if t_choice == "1":
+                    trainee_workflow(session)
+                elif t_choice == "2":
+                    view_trainee_details(session)
+                elif t_choice == "3":
+                    break
+                else:
+                    print("Invalid choice")
 
         elif choice == "3":
             while True:
                 workout_menu()
-                w_choice = input("Enter choice (1-7): ").strip()
+                w_choice = input("Enter choice (1-8): ").strip()
 
                 if w_choice == "1":
                     try:
@@ -440,7 +480,8 @@ def main():
                             duration = input("Enter duration (minutes): ").strip()
                             duration = validate_positive_int(duration, "duration")
                             notes = input("Enter notes (optional): ").strip() or None
-                            workout = Workout(duration=duration, notes=notes, trainee_id=trainee_id)
+                            # Add check-in time
+                            workout = Workout(duration=duration, notes=notes, trainee_id=trainee_id, check_in_time=datetime.now())
                             session.add(workout)
                             session.commit()
                             created_ids.append(workout.id)
@@ -479,15 +520,16 @@ def main():
                             if w.id not in seen:
                                 trainee_name = trainee.name if trainee else "Unknown"
                                 trainer_name = trainer.name if trainer else "Unknown"
-                                print(f"Debug: Workout ID {w.id}, Trainee: {trainee_name}, Trainer: {trainer_name}")
+                                check_in = w.check_in_time.strftime("%Y-%m-%d %H:%M:%S") if w.check_in_time else "None"
+                                check_out = w.check_out_time.strftime("%Y-%m-%d %H:%M:%S") if w.check_out_time else "None"
                                 table.append([
                                     w.id, w.date.strftime("%Y-%m-%d %H:%M:%S"), w.duration,
-                                    w.notes or "", trainee_name, trainer_name
+                                    w.notes or "", trainee_name, trainer_name, check_in, check_out
                                 ])
                                 seen.add(w.id)
                         print(f"\nAll Workouts ({len(workouts)} total)")
                         print_table(table, [
-                            "ID", "Date", "Duration (min)", "Notes", "Trainee Name", "Trainer Name"
+                            "ID", "Date", "Duration (min)", "Notes", "Trainee Name", "Trainer Name", "Check-in", "Check-out"
                         ])
                     else:
                         print("No workouts found")
@@ -558,6 +600,23 @@ def main():
                         print(f"Error: {e}")
 
                 elif w_choice == "7":
+                    try:
+                        workout_id = input("Enter workout ID to check out: ").strip()
+                        workout_id = validate_positive_int(workout_id, "workout ID")
+                        workout = session.query(Workout).filter_by(id=workout_id).first()
+                        if workout:
+                            if workout.check_out_time:
+                                print(f"Workout already checked out at {workout.check_out_time.strftime('%Y-%m-%d %H:%M:%S')}")
+                            else:
+                                workout.check_out_time = datetime.now()
+                                session.commit()
+                                print(f"Checked out workout ID {workout.id} at {workout.check_out_time.strftime('%Y-%m-%d %H:%M:%S')}")
+                        else:
+                            print("Workout not found")
+                    except ValueError as e:
+                        print(f"Error: {e}")
+
+                elif w_choice == "8":
                     break
                 else:
                     print("Invalid choice")
