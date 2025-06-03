@@ -83,6 +83,14 @@ class Exercise(Base):
             print(f"Unexpected Error: {e}")
             return False
 
+    @classmethod
+    def get_all(cls, session):
+        return session.query(cls).all()
+
+    @classmethod
+    def find_by_id(cls, session, exercise_id):
+        return session.query(cls).filter_by(id=exercise_id).first()
+
 def create_db():
     db_path = os.path.abspath("fitness_tracker.db")
     engine = create_engine(f"sqlite:///{db_path}", echo=False)

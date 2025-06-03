@@ -56,7 +56,7 @@ def seed_database():
         session.add_all(exercises)
         session.commit()
 
-        print(f"Database seeded with {len(trainers)} trainers, {len(trainees)} trainees, {len(workouts)} workouts, and {len(exercises)} exercises")
+        print("Database seeded successfully")
     except Exception as e:
         print(f"Error seeding database: {e}")
         session.rollback()

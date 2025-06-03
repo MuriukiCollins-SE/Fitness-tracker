@@ -8,7 +8,7 @@ import os
 def main_menu():
     print("\nFitness Tracker CLI")
     print("1. View Trainer Menu")
-    print("2. View Trainee Menu")
+    print("2. Trainee registration")
     print("3. Workout Menu")
     print("4. Exercise Menu")
     print("5. Exit")
@@ -18,7 +18,8 @@ def trainer_menu():
     print("1. View Assigned Trainees")
     print("2. View Trainee Details")
     print("3. Delete Trainee")
-    print("4. Back to Main Menu")
+    print("4. Add Trainer")
+    print("5. Back to Main Menu")
 
 def workout_menu():
     print("\nWorkout Menu")
@@ -252,7 +253,7 @@ def main():
         if choice == "1":
             while True:
                 trainer_menu()
-                t_choice = input("Enter choice (1-4): ").strip()
+                t_choice = input("Enter choice (1-5): ").strip()
 
                 if t_choice == "1":
                     try:
@@ -391,6 +392,24 @@ def main():
                         session.rollback()
 
                 elif t_choice == "4":
+                    # Add Trainer
+                    name = input("Enter trainer name: ").strip()
+                    if not name:
+                        print("Error: Name cannot be empty")
+                        continue
+                    if len(name) > 50:
+                        print("Error: Name too long (max 50 characters).")
+                        continue
+                    existing_trainer = session.query(Trainer).filter_by(name=name).first()
+                    if existing_trainer:
+                        print(f"Error: Trainer '{name}' already exists (ID: {existing_trainer.id}). Please use a unique name.")
+                        continue
+                    trainer = Trainer(name=name)
+                    session.add(trainer)
+                    session.commit()
+                    print(f"Trainer '{name}' added successfully with ID {trainer.id}")
+
+                elif t_choice == "5":
                     break
                 else:
                     print("Invalid choice")
